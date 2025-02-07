@@ -24,7 +24,7 @@ const register = async (req, res) => {
       email,
       password: hashedPassword,
       name,
-      role,
+      role: "pelapor",
     });
 
     const accessToken = jwt.generateAccessToken(newUser);

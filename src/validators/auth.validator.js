@@ -6,7 +6,6 @@ const validateRegister = [
     .isLength({ min: 6 })
     .withMessage("Password must be at least 6 characters long"),
   body("name").notEmpty().withMessage("Name is required"),
-  body("role").notEmpty().withMessage("Role is required"),
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
