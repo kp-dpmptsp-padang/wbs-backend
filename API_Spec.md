@@ -106,6 +106,29 @@ Response: `200 OK`
 }
 ```
 
+### Reset Password
+
+```http
+POST /auth/reset-password
+```
+
+Request Body:
+
+```json
+{
+  "token": "string",
+  "new_password": "string"
+}
+```
+
+Response: `200 OK`
+
+```json
+{
+  "message": "Password has been reset successfully"
+}
+```
+
 #### Update Profile
 
 ```http
