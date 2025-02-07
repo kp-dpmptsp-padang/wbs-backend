@@ -5,11 +5,17 @@ const nodemailer = require("nodemailer");
 const { Op } = require("sequelize");
 
 const register = async (req, res) => {
-  const { email, password, name, role } = req.body;
+  const { name, email, password, password_confirmation } = req.body;
   try {
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
+    }
+
+    if (password !== password_confirmation) {
+      return res
+        .status(400)
+        .json({ message: "Password confirmation does not match" });
     }
 
     const hashedPassword = await hashPassword(password);
