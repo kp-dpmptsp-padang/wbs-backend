@@ -1,35 +1,35 @@
 "use strict";
+
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable("Users", {
+    await queryInterface.createTable("RefreshTokens", {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
-      email: {
-        type: Sequelize.STRING,
-        allowNull: false,
-        unique: true,
-      },
-      password: {
+      token: {
         type: Sequelize.STRING,
         allowNull: false,
       },
-      role: {
-        type: Sequelize.ENUM(
-          "pelapor",
-          "super-admin",
-          "admin-verifikator",
-          "admin-prosesor"
-        ),
-        defaultValue: "pelapor",
+      userId: {
+        type: Sequelize.INTEGER,
         allowNull: false,
+        references: {
+          model: "Users",
+          key: "id",
+        },
+        onUpdate: "CASCADE",
+        onDelete: "CASCADE",
       },
-      name: {
+      deviceInfo: {
         type: Sequelize.STRING,
+        allowNull: true,
+      },
+      expiresAt: {
+        type: Sequelize.DATE,
         allowNull: false,
       },
       createdAt: {
@@ -42,11 +42,11 @@ module.exports = {
       },
     });
 
-    await queryInterface.addIndex("Users", ["email"], {
-      unique: true,
-    });
+    await queryInterface.addIndex("RefreshTokens", ["token"]);
+    await queryInterface.addIndex("RefreshTokens", ["userId"]);
   },
+
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable("Users");
+    await queryInterface.dropTable("RefreshTokens");
   },
 };

@@ -1,12 +1,15 @@
 # WBS (Whistle Blowing System) API Specification
 
 ## Base URL
+
 ```
 https://wbs-api.dpmptsp.padang.go.id/v1
 ```
 
 ## Authentication
+
 All API endpoints except public endpoints require JWT Bearer token authentication:
+
 ```
 Authorization: Bearer <jwt_token>
 ```
@@ -14,11 +17,15 @@ Authorization: Bearer <jwt_token>
 ## Endpoints
 
 ### Authentication
+
 #### Register
+
 ```http
 POST /auth/register
 ```
+
 Request Body:
+
 ```json
 {
   "name": "string",
@@ -27,34 +34,46 @@ Request Body:
   "password_confirmation": "string"
 }
 ```
+
 Response: `201 Created`
+
 ```json
 {
   "message": "Registration successful",
+  "access_token": "string",
+  "refresh_token": "string",
+  "token_type": "Bearer",
   "user": {
     "id": "integer",
     "name": "string",
     "email": "string",
-    "role": "pelapor"
+    "role": "string"
   }
 }
 ```
 
 #### Login
+
 ```http
 POST /auth/login
 ```
+
 Request Body:
+
 ```json
 {
   "email": "string",
   "password": "string"
 }
 ```
+
 Response: `200 OK`
+
 ```json
 {
+  "message": "Login Successful",
   "access_token": "string",
+  "refresh_token": "string",
   "token_type": "Bearer",
   "user": {
     "id": "integer",
@@ -66,16 +85,21 @@ Response: `200 OK`
 ```
 
 #### Forgot Password
+
 ```http
 POST /auth/forgot-password
 ```
+
 Request Body:
+
 ```json
 {
   "email": "string"
 }
 ```
+
 Response: `200 OK`
+
 ```json
 {
   "message": "Password reset link sent"
@@ -83,16 +107,21 @@ Response: `200 OK`
 ```
 
 #### Update Profile
+
 ```http
 PUT /auth/profile
 ```
+
 Request Body:
+
 ```json
 {
   "name": "string"
 }
 ```
+
 Response: `200 OK`
+
 ```json
 {
   "message": "Profile updated successfully",
@@ -106,10 +135,13 @@ Response: `200 OK`
 ```
 
 #### Update Password
+
 ```http
 PUT /auth/password
 ```
+
 Request Body:
+
 ```json
 {
   "current_password": "string",
@@ -117,7 +149,9 @@ Request Body:
   "new_password_confirmation": "string"
 }
 ```
+
 Response: `200 OK`
+
 ```json
 {
   "message": "Password updated successfully"
@@ -125,11 +159,15 @@ Response: `200 OK`
 ```
 
 ### Reports
+
 #### Create Report
+
 ```http
 POST /reports
 ```
+
 Request Body (multipart/form-data):
+
 ```json
 {
   "title": "string",
@@ -142,7 +180,9 @@ Request Body (multipart/form-data):
   "evidence_files[]": "file"
 }
 ```
+
 Response: `201 Created`
+
 ```json
 {
   "message": "Report created successfully",
@@ -156,31 +196,37 @@ Response: `201 Created`
 ```
 
 #### Get Reports List (Admin)
+
 ```http
 GET /reports
 ```
+
 Query Parameters:
+
 - status: string (menunggu-verifikasi|diproses|ditolak|selesai)
 - page: integer
 - per_page: integer
 
 Response: `200 OK`
+
 ```json
 {
-  "data": [{
-    "id": "integer",
-    "title": "string",
-    "violation": "string",
-    "location": "string",
-    "date": "date",
-    "status": "string",
-    "created_at": "datetime",
-    "is_anonymous": "boolean",
-    "reporter": {
+  "data": [
+    {
       "id": "integer",
-      "name": "string"
+      "title": "string",
+      "violation": "string",
+      "location": "string",
+      "date": "date",
+      "status": "string",
+      "created_at": "datetime",
+      "is_anonymous": "boolean",
+      "reporter": {
+        "id": "integer",
+        "name": "string"
+      }
     }
-  }],
+  ],
   "meta": {
     "current_page": "integer",
     "last_page": "integer",
@@ -191,10 +237,13 @@ Response: `200 OK`
 ```
 
 #### Get Report Detail
+
 ```http
 GET /reports/{id}
 ```
+
 Response: `200 OK`
+
 ```json
 {
   "data": {
@@ -212,11 +261,13 @@ Response: `200 OK`
     "completed_at": "datetime|null",
     "created_at": "datetime",
     "is_anonymous": "boolean",
-    "files": [{
-      "id": "integer",
-      "file_path": "string",
-      "file_type": "string"
-    }],
+    "files": [
+      {
+        "id": "integer",
+        "file_path": "string",
+        "file_type": "string"
+      }
+    ],
     "reporter": {
       "id": "integer",
       "name": "string"
@@ -230,16 +281,21 @@ Response: `200 OK`
 ```
 
 #### Get Anonymous Report
+
 ```http
 GET /reports/anonymous/{unique_code}
 ```
+
 Response: Same as Get Report Detail
 
 #### Process Report
+
 ```http
 POST /reports/{id}/process
 ```
+
 Response: `200 OK`
+
 ```json
 {
   "message": "Report is now being processed",
@@ -251,16 +307,21 @@ Response: `200 OK`
 ```
 
 #### Reject Report
+
 ```http
 POST /reports/{id}/reject
 ```
+
 Request Body:
+
 ```json
 {
   "rejection_reason": "text"
 }
 ```
+
 Response: `200 OK`
+
 ```json
 {
   "message": "Report has been rejected",
@@ -272,17 +333,22 @@ Response: `200 OK`
 ```
 
 #### Complete Report
+
 ```http
 POST /reports/{id}/complete
 ```
+
 Request Body (multipart/form-data):
+
 ```json
 {
   "admin_notes": "text",
   "handling_proof[]": "file"
 }
 ```
+
 Response: `200 OK`
+
 ```json
 {
   "message": "Report has been completed",
@@ -294,37 +360,48 @@ Response: `200 OK`
 ```
 
 ### Chats
+
 #### Get Report Chats
+
 ```http
 GET /reports/{report_id}/chats
 ```
+
 Response: `200 OK`
+
 ```json
 {
-  "data": [{
-    "id": "integer",
-    "message": "text",
-    "created_at": "datetime",
-    "user": {
+  "data": [
+    {
       "id": "integer",
-      "name": "string",
-      "role": "string"
+      "message": "text",
+      "created_at": "datetime",
+      "user": {
+        "id": "integer",
+        "name": "string",
+        "role": "string"
+      }
     }
-  }]
+  ]
 }
 ```
 
 #### Send Chat Message
+
 ```http
 POST /reports/{report_id}/chats
 ```
+
 Request Body:
+
 ```json
 {
   "message": "text"
 }
 ```
+
 Response: `201 Created`
+
 ```json
 {
   "data": {
@@ -341,28 +418,37 @@ Response: `201 Created`
 ```
 
 ### Admin Management (Super Admin Only)
+
 #### Get Admins List
+
 ```http
 GET /admins
 ```
+
 Response: `200 OK`
+
 ```json
 {
-  "data": [{
-    "id": "integer",
-    "name": "string",
-    "email": "string",
-    "role": "string",
-    "created_at": "datetime"
-  }]
+  "data": [
+    {
+      "id": "integer",
+      "name": "string",
+      "email": "string",
+      "role": "string",
+      "created_at": "datetime"
+    }
+  ]
 }
 ```
 
 #### Create Admin
+
 ```http
 POST /admins
 ```
+
 Request Body:
+
 ```json
 {
   "name": "string",
@@ -371,7 +457,9 @@ Request Body:
   "role": "admin-verifikator|admin-prosesor"
 }
 ```
+
 Response: `201 Created`
+
 ```json
 {
   "message": "Admin created successfully",
@@ -385,10 +473,13 @@ Response: `201 Created`
 ```
 
 #### Update Admin
+
 ```http
 PUT /admins/{id}
 ```
+
 Request Body:
+
 ```json
 {
   "name": "string",
@@ -397,7 +488,9 @@ Request Body:
   "role": "admin-verifikator|admin-prosesor"
 }
 ```
+
 Response: `200 OK`
+
 ```json
 {
   "message": "Admin updated successfully",
@@ -411,10 +504,13 @@ Response: `200 OK`
 ```
 
 #### Delete Admin
+
 ```http
 DELETE /admins/{id}
 ```
+
 Response: `200 OK`
+
 ```json
 {
   "message": "Admin deleted successfully"
@@ -422,11 +518,15 @@ Response: `200 OK`
 ```
 
 ### Dashboard Statistics
+
 #### Get Overview Statistics
+
 ```http
 GET /statistics/overview
 ```
+
 Response: `200 OK`
+
 ```json
 {
   "data": {
@@ -440,34 +540,43 @@ Response: `200 OK`
 ```
 
 ### Dashboard (Role-Based)
+
 #### Get User Dashboard
+
 ```http
 GET /dashboard/user
 ```
+
 Response: `200 OK`
+
 ```json
 {
   "active_reports": {
     "total": "integer",
-    "waiting_verification": "integer", 
+    "waiting_verification": "integer",
     "in_process": "integer",
     "completed": "integer"
   },
-  "latest_activities": [{
-    "type": "string",
-    "report_id": "integer",
-    "message": "string",
-    "timestamp": "datetime"
-  }],
+  "latest_activities": [
+    {
+      "type": "string",
+      "report_id": "integer",
+      "message": "string",
+      "timestamp": "datetime"
+    }
+  ],
   "unread_messages": "integer"
 }
 ```
 
 #### Get Verifikator Dashboard
+
 ```http
 GET /dashboard/verifikator
 ```
+
 Response: `200 OK`
+
 ```json
 {
   "pending_verifications": {
@@ -477,20 +586,25 @@ Response: `200 OK`
   "verification_stats": {
     "today_verified": "integer",
     "today_rejected": "integer",
-    "weekly_performance": [{
-      "date": "date",
-      "verified": "integer",
-      "rejected": "integer"
-    }]
+    "weekly_performance": [
+      {
+        "date": "date",
+        "verified": "integer",
+        "rejected": "integer"
+      }
+    ]
   }
 }
 ```
 
 #### Get Prosesor Dashboard
+
 ```http
 GET /dashboard/prosesor
 ```
+
 Response: `200 OK`
+
 ```json
 {
   "active_cases": {
@@ -507,10 +621,13 @@ Response: `200 OK`
 ```
 
 #### Get Super Admin Dashboard
+
 ```http
 GET /dashboard/super-admin
 ```
+
 Response: `200 OK`
+
 ```json
 {
   "system_stats": {
@@ -519,37 +636,46 @@ Response: `200 OK`
     "completion_rate": "float",
     "average_process_time": "string"
   },
-  "admin_performance": [{
-    "admin_id": "integer",
-    "name": "string",
-    "role": "string",
-    "reports_handled": "integer",
-    "average_response_time": "string"
-  }]
+  "admin_performance": [
+    {
+      "admin_id": "integer",
+      "name": "string",
+      "role": "string",
+      "reports_handled": "integer",
+      "average_response_time": "string"
+    }
+  ]
 }
 ```
 
 ### Notifications
+
 #### Get User Notifications
+
 ```http
 GET /notifications
 ```
+
 Query Parameters:
+
 - read: boolean
 - page: integer
 - per_page: integer
 
 Response: `200 OK`
+
 ```json
 {
-  "data": [{
-    "id": "integer",
-    "type": "string",
-    "message": "string",
-    "read": "boolean",
-    "created_at": "datetime",
-    "report_id": "integer|null"
-  }],
+  "data": [
+    {
+      "id": "integer",
+      "type": "string",
+      "message": "string",
+      "read": "boolean",
+      "created_at": "datetime",
+      "report_id": "integer|null"
+    }
+  ],
   "meta": {
     "unread_count": "integer",
     "current_page": "integer",
@@ -559,10 +685,13 @@ Response: `200 OK`
 ```
 
 #### Mark Notification as Read
+
 ```http
 PUT /notifications/{id}/read
 ```
+
 Response: `200 OK`
+
 ```json
 {
   "message": "Notification marked as read"
@@ -570,10 +699,13 @@ Response: `200 OK`
 ```
 
 #### Mark All Notifications as Read
+
 ```http
 PUT /notifications/read-all
 ```
+
 Response: `200 OK`
+
 ```json
 {
   "message": "All notifications marked as read"
@@ -581,10 +713,13 @@ Response: `200 OK`
 ```
 
 #### Get Notification Settings
+
 ```http
 GET /notifications/settings
 ```
+
 Response: `200 OK`
+
 ```json
 {
   "email_notifications": "boolean",
@@ -598,10 +733,13 @@ Response: `200 OK`
 ```
 
 #### Update Notification Settings
+
 ```http
 PUT /notifications/settings
 ```
+
 Request Body:
+
 ```json
 {
   "email_notifications": "boolean",
@@ -613,7 +751,9 @@ Request Body:
   }
 }
 ```
+
 Response: `200 OK`
+
 ```json
 {
   "message": "Notification settings updated successfully"
@@ -621,9 +761,11 @@ Response: `200 OK`
 ```
 
 ## Error Responses
+
 All endpoints may return these error responses:
 
 ### 400 Bad Request
+
 ```json
 {
   "message": "Validation failed",
@@ -634,6 +776,7 @@ All endpoints may return these error responses:
 ```
 
 ### 401 Unauthorized
+
 ```json
 {
   "message": "Unauthenticated"
@@ -641,6 +784,7 @@ All endpoints may return these error responses:
 ```
 
 ### 403 Forbidden
+
 ```json
 {
   "message": "Unauthorized access"
@@ -648,6 +792,7 @@ All endpoints may return these error responses:
 ```
 
 ### 404 Not Found
+
 ```json
 {
   "message": "Resource not found"
@@ -655,6 +800,7 @@ All endpoints may return these error responses:
 ```
 
 ### 500 Internal Server Error
+
 ```json
 {
   "message": "Internal server error"
