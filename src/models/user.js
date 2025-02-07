@@ -38,6 +38,8 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: "pelapor",
         allowNull: false,
       },
+      resetPasswordToken: DataTypes.STRING,
+      resetPasswordExpires: DataTypes.DATE,
     },
     {
       sequelize,

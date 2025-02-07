@@ -5,20 +5,14 @@ const {
   validateRegister,
   validateLogin,
 } = require("../validators/auth.validator");
+const authenticate = require("../middlewares/auth.middleware");
 
-// Register route
 router.post("/register", validateRegister, authController.register);
-
-// Login route
 router.post("/login", validateLogin, authController.login);
-
-// Forgot password route
 router.post("/forgot-password", authController.forgotPassword);
+router.post("/reset-password", authController.resetPassword);
 
-// Update profile route
-router.put("/profile", authController.updateProfile);
-
-// Update password route
-router.put("/password", authController.updatePassword);
+router.put("/profile", authenticate, authController.updateProfile);
+router.put("/password", authenticate, authController.updatePassword);
 
 module.exports = router;
