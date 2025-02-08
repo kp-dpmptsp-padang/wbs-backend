@@ -181,6 +181,28 @@ Response: `200 OK`
 }
 ```
 
+#### Logout
+
+```http
+POST /auth/logout
+```
+
+Request Body:
+
+```json
+{
+  "refresh_token": "string"
+}
+```
+
+Response: `200 OK`
+
+```json
+{
+  "message": "Logout successful"
+}
+```
+
 ### Reports
 
 #### Create Report

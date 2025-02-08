@@ -285,6 +285,27 @@ const updatePassword = async (req, res) => {
   }
 };
 
+const logout = async (req, res) => {
+  const refreshToken = req.body.refresh_token;
+
+  try {
+    await RefreshToken.destroy({
+      where: {
+        token: refreshToken,
+      },
+    });
+
+    res.status(200).json({
+      message: "Logout successful",
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -292,4 +313,5 @@ module.exports = {
   resetPassword,
   updateProfile,
   updatePassword,
+  logout,
 };
