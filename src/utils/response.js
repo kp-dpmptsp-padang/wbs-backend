@@ -5,6 +5,13 @@ const successResponse = (res, message, data) => {
   });
 };
 
+const successCreatedResponse = (res, message, data) => {
+  return res.status(201).json({
+    message,
+    data,
+  });
+};
+
 const errorResponse = (res, message, statusCode = 500) => {
   return res.status(statusCode).json({
     message,
@@ -14,4 +21,5 @@ const errorResponse = (res, message, statusCode = 500) => {
 module.exports = {
   successResponse,
   errorResponse,
+  successCreatedResponse,
 };

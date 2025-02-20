@@ -1,7 +1,11 @@
 const { validationResult } = require("express-validator");
-const { Report, Report_File, User } = require("../models");
+const { Report, Report_File, User, Notification } = require("../models");
 const { generateUniqueCode } = require("../utils/unique_code");
-const { successResponse, errorResponse } = require("../utils/response");
+const {
+  successResponse,
+  errorResponse,
+  successCreatedResponse,
+} = require("../utils/response");
 
 const createReport = async (req, res) => {
   const errors = validationResult(req);
@@ -12,7 +16,7 @@ const createReport = async (req, res) => {
   try {
     const { title, violation, location, date, actors, detail, is_anonymous } =
       req.body;
-    const evidenceFiles = req.files;
+    const evidence_files = req.file;
 
     let userId = null;
     let unique_code = null;
@@ -36,14 +40,12 @@ const createReport = async (req, res) => {
       unique_code,
     });
 
-    if (evidenceFiles) {
-      for (const file of evidenceFiles) {
-        await Report_File.create({
-          report_id: newReport.id,
-          file_path: file.path,
-          file_type: "evidence",
-        });
-      }
+    if (evidence_files) {
+      await Report_File.create({
+        report_id: newReport.id,
+        file_path: evidence_files.path,
+        file_type: "evidence",
+      });
     }
 
     const responseData = {
@@ -53,7 +55,27 @@ const createReport = async (req, res) => {
       unique_code: newReport.unique_code,
     };
 
-    return successResponse(res, "Report created successfully", responseData);
+    const adminUsers = await User.findAll({
+      where: { role: "admin-verifikator" },
+    });
+
+    if (adminUsers && adminUsers.length > 0) {
+      const notifications = adminUsers.map((adminUser) => ({
+        user_id: adminUser.id,
+        message: `Laporan tentang ${title} masuk dari ${
+          is_anonymous ? "Anonymous" : req.user.name
+        }`,
+        is_read: false,
+      }));
+
+      await Notification.bulkCreate(notifications);
+    }
+
+    return successCreatedResponse(
+      res,
+      "Report created successfully",
+      responseData
+    );
   } catch (error) {
     console.error(error);
     return errorResponse(res, "Server error");
@@ -233,9 +255,149 @@ const getAnonymousReportDetail = async (req, res) => {
   }
 };
 
+const processReport = async (req, res) => {
+  try {
+    const reportId = req.params.id;
+    const adminId = req.user.id;
+
+    const adminUser = await User.findOne({
+      where: { id: adminId, role: "admin-verifikator" },
+    });
+
+    if (!adminUser) {
+      return errorResponse(res, "Unauthorized", 403);
+    }
+
+    const report = await Report.findOne({
+      where: { id: reportId },
+    });
+
+    if (!report) {
+      return errorResponse(res, "Report not found", 404);
+    }
+
+    if (report.status !== "menunggu-verifikasi") {
+      return errorResponse(res, "Report cannot be processed", 400);
+    }
+
+    report.status = "diproses";
+    report.adminId = adminId;
+    await report.save();
+
+    const responseData = {
+      id: report.id,
+      status: report.status,
+    };
+
+    return successResponse(res, "Report is now being processed", responseData);
+  } catch (error) {
+    console.error(error);
+    return errorResponse(res, "Server error");
+  }
+};
+
+const rejectReport = async (req, res) => {
+  try {
+    const reportId = req.params.id;
+    const adminId = req.user.id;
+    const { rejection_reason } = req.body;
+
+    const adminUser = await User.findOne({
+      where: { id: adminId, role: "admin-verifikator" },
+    });
+
+    if (!adminUser) {
+      return errorResponse(res, "Unauthorized", 403);
+    }
+
+    const report = await Report.findOne({
+      where: { id: reportId },
+    });
+
+    if (!report) {
+      return errorResponse(res, "Report not found", 404);
+    }
+
+    if (report.status !== "menunggu-verifikasi") {
+      return errorResponse(res, "Report cannot be rejected", 400);
+    }
+
+    report.status = "ditolak";
+    report.adminId = adminId;
+    report.rejection_reason = rejection_reason;
+    await report.save();
+
+    const responseData = {
+      id: report.id,
+      status: report.status,
+    };
+
+    return successResponse(res, "Report has been rejected", responseData);
+  } catch (error) {
+    console.error(error);
+    return errorResponse(res, "Server error");
+  }
+};
+
+const completeReport = async (req, res) => {
+  try {
+    const reportId = req.params.id;
+    const adminId = req.user.id;
+    const { admin_notes } = req.body;
+    const handling_proof = req.file;
+
+    const adminUser = await User.findOne({
+      where: { id: adminId, role: "admin-prosesor" },
+    });
+
+    if (!adminUser) {
+      return errorResponse(res, "Unauthorized", 403);
+    }
+
+    const report = await Report.findOne({
+      where: { id: reportId },
+    });
+
+    if (!report) {
+      return errorResponse(res, "Report not found", 404);
+    }
+
+    if (report.status !== "diproses") {
+      return errorResponse(res, "Report cannot be completed", 400);
+    }
+
+    report.status = "selesai";
+    report.adminId = adminId;
+    report.admin_notes = admin_notes;
+    report.completed_at = new Date();
+    await report.save();
+
+    if (handling_proof) {
+      await Report_File.create({
+        report_id: report.id,
+        file_path: handling_proof.path,
+        file_type: "handling_proof",
+      });
+    }
+
+    const responseData = {
+      id: report.id,
+      status: report.status,
+    };
+
+    return successResponse(res, "Report has been completed", responseData);
+  } catch (error) {
+    console.error(error);
+    return errorResponse(res, "Server error");
+  }
+};
+
 module.exports = {
   createReport,
   getReportDetail,
   getReportHistory,
   getAnonymousReportDetail,
+  processReport,
+  rejectReport,
+  completeReport,
 };

@@ -3,7 +3,11 @@ const jwt = require("../utils/jwt");
 const { User, RefreshToken } = require("../models");
 const nodemailer = require("nodemailer");
 const { Op } = require("sequelize");
-const { successResponse, errorResponse } = require("../utils/response");
+const {
+  successResponse,
+  errorResponse,
+  successCreatedResponse,
+} = require("../utils/response");
 
 const register = async (req, res) => {
   const { name, email, password, password_confirmation } = req.body;
@@ -38,7 +42,7 @@ const register = async (req, res) => {
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
 
-    return successResponse(
+    return successCreatedResponse(
       res,
       "Registration successful",
       {
