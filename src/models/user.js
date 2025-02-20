@@ -15,6 +15,10 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "userId",
         as: "refreshTokens",
       });
+      User.hasMany(models.Notification, {
+        foreignKey: "user_id",
+        as: "notifications",
+      });
     }
   }
   User.init(
