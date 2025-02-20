@@ -3,19 +3,18 @@ const jwt = require("../utils/jwt");
 const { User, RefreshToken } = require("../models");
 const nodemailer = require("nodemailer");
 const { Op } = require("sequelize");
+const { successResponse, errorResponse } = require("../utils/response");
 
 const register = async (req, res) => {
   const { name, email, password, password_confirmation } = req.body;
   try {
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
-      return res.status(400).json({ message: "User already exists" });
+      return errorResponse(res, "User already exists", 400);
     }
 
     if (password !== password_confirmation) {
-      return res
-        .status(400)
-        .json({ message: "Password confirmation does not match" });
+      return errorResponse(res, "Password confirmation does not match", 400);
     }
 
     const hashedPassword = await hashPassword(password);
@@ -39,23 +38,24 @@ const register = async (req, res) => {
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
 
-    res.status(201).json({
-      message: "Registration successful",
-      access_token: accessToken,
-      refresh_token: refreshToken,
-      token_type: "Bearer",
-      user: {
-        id: newUser.id,
-        name: newUser.name,
-        email: newUser.email,
-        role: newUser.role,
+    return successResponse(
+      res,
+      "Registration successful",
+      {
+        access_token: accessToken,
+        refresh_token: refreshToken,
+        token_type: "Bearer",
+        user: {
+          id: newUser.id,
+          name: newUser.name,
+          email: newUser.email,
+          role: newUser.role,
+        },
       },
-    });
+      201
+    );
   } catch (error) {
-    res.status(500).json({
-      message: "Internal server error",
-      error: error.message,
-    });
+    return errorResponse(res, "Internal server error", 500, error.message);
   }
 };
 
@@ -65,12 +65,12 @@ const login = async (req, res) => {
   try {
     const user = await User.findOne({ where: { email } });
     if (!user) {
-      return res.status(401).json({ message: "Invalid email or password" });
+      return errorResponse(res, "Invalid email or password", 401);
     }
 
     const isPasswordValid = await comparePassword(password, user.password);
     if (!isPasswordValid) {
-      return res.status(401).json({ message: "Invalid email or password" });
+      return errorResponse(res, "Invalid email or password", 401);
     }
 
     const accessToken = jwt.generateAccessToken(user);
@@ -85,8 +85,7 @@ const login = async (req, res) => {
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
 
-    res.status(200).json({
-      message: "Login successful",
+    return successResponse(res, "Login successful", {
       access_token: accessToken,
       refresh_token: refreshToken,
       token_type: "Bearer",
@@ -98,10 +97,7 @@ const login = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({
-      message: "Internal server error",
-      error: error.message,
-    });
+    return errorResponse(res, "Internal server error", 500, error.message);
   }
 };
 
@@ -111,10 +107,11 @@ const forgotPassword = async (req, res) => {
   try {
     const user = await User.findOne({ where: { email } });
     if (!user) {
-      return res.status(404).json({
-        message:
-          "If a user with this email exists, a password reset link will be sent",
-      });
+      return errorResponse(
+        res,
+        "If a user with this email exists, a password reset link will be sent",
+        404
+      );
     }
 
     const resetToken = jwt.generateResetToken(user);
@@ -149,14 +146,9 @@ const forgotPassword = async (req, res) => {
 
     await transporter.sendMail(mailOptions);
 
-    res.status(200).json({
-      message: "Password reset link sent",
-    });
+    return successResponse(res, "Password reset link sent");
   } catch (error) {
-    res.status(500).json({
-      message: "Internal server error",
-      error: error.message,
-    });
+    return errorResponse(res, "Internal server error", 500, error.message);
   }
 };
 
@@ -178,9 +170,7 @@ const resetPassword = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(400).json({
-        message: "Invalid or expired reset token",
-      });
+      return errorResponse(res, "Invalid or expired reset token", 400);
     }
 
     const hashedPassword = await hashPassword(new_password);
@@ -191,14 +181,9 @@ const resetPassword = async (req, res) => {
       resetPasswordExpires: null,
     });
 
-    res.status(200).json({
-      message: "Password has been reset successfully",
-    });
+    return successResponse(res, "Password has been reset successfully");
   } catch (error) {
-    res.status(500).json({
-      message: "Internal server error",
-      error: error.message,
-    });
+    return errorResponse(res, "Internal server error", 500, error.message);
   }
 };
 
@@ -208,17 +193,14 @@ const updateProfile = async (req, res) => {
   try {
     const user = await User.findByPk(req.user.id);
     if (!user) {
-      return res.status(404).json({
-        message: "User not found",
-      });
+      return errorResponse(res, "User not found", 404);
     }
 
     await user.update({
       name: name,
     });
 
-    res.status(200).json({
-      message: "Profile updated successfully",
+    return successResponse(res, "Profile updated successfully", {
       user: {
         id: user.id,
         name: user.name,
@@ -227,10 +209,7 @@ const updateProfile = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({
-      message: "Internal server error",
-      error: error.message,
-    });
+    return errorResponse(res, "Internal server error", 500, error.message);
   }
 };
 
@@ -240,16 +219,16 @@ const updatePassword = async (req, res) => {
 
   try {
     if (new_password !== new_password_confirmation) {
-      return res.status(400).json({
-        message: "New password and confirmation do not match",
-      });
+      return errorResponse(
+        res,
+        "New password and confirmation do not match",
+        400
+      );
     }
 
     const user = await User.findByPk(req.user.id);
     if (!user) {
-      return res.status(404).json({
-        message: "User not found",
-      });
+      return errorResponse(res, "User not found", 404);
     }
 
     const isPasswordValid = await comparePassword(
@@ -257,9 +236,7 @@ const updatePassword = async (req, res) => {
       user.password
     );
     if (!isPasswordValid) {
-      return res.status(401).json({
-        message: "Current password is incorrect",
-      });
+      return errorResponse(res, "Current password is incorrect", 401);
     }
 
     const hashedPassword = await hashPassword(new_password);
@@ -274,14 +251,9 @@ const updatePassword = async (req, res) => {
       },
     });
 
-    res.status(200).json({
-      message: "Password updated successfully",
-    });
+    return successResponse(res, "Password updated successfully");
   } catch (error) {
-    res.status(500).json({
-      message: "Internal server error",
-      error: error.message,
-    });
+    return errorResponse(res, "Internal server error", 500, error.message);
   }
 };
 
@@ -295,14 +267,9 @@ const logout = async (req, res) => {
       },
     });
 
-    res.status(200).json({
-      message: "Logout successful",
-    });
+    return successResponse(res, "Logout successful");
   } catch (error) {
-    res.status(500).json({
-      message: "Internal server error",
-      error: error.message,
-    });
+    return errorResponse(res, "Internal server error", 500, error.message);
   }
 };
 

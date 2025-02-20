@@ -3,7 +3,14 @@ const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
     static associate(models) {
-      // Menambahkan relasi dengan RefreshToken
+      User.hasMany(models.Report, {
+        foreignKey: "userId",
+        as: "reports",
+      });
+      User.hasMany(models.Report, {
+        foreignKey: "adminId",
+        as: "adminReports",
+      });
       User.hasMany(models.RefreshToken, {
         foreignKey: "userId",
         as: "refreshTokens",
