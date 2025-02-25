@@ -1,6 +1,6 @@
 const { hashPassword, comparePassword } = require("../utils/password");
 const jwt = require("../utils/jwt");
-const { User, RefreshToken } = require("../models");
+const { User, RefreshToken, Report } = require("../models");
 const nodemailer = require("nodemailer");
 const { Op } = require("sequelize");
 const {
@@ -277,6 +277,34 @@ const logout = async (req, res) => {
   }
 };
 
+const getProfile = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.user.id);
+    if (!user) {
+      return errorResponse(res, "User not found", 404);
+    }
+
+    const reportCount = await Report.count({
+      where: {
+        userId: user.id,
+        is_anonymous: false,
+      },
+    });
+
+    return successResponse(res, "User profile fetched", {
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        reportCount: reportCount,
+      },
+    });
+  } catch (error) {
+    return errorResponse(res, "Internal server error", 500, error.message);
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -285,4 +313,5 @@ module.exports = {
   updateProfile,
   updatePassword,
   logout,
+  getProfile,
 };
