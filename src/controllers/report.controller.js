@@ -6,6 +6,7 @@ const {
   errorResponse,
   successCreatedResponse,
 } = require("../utils/response");
+const moment = require("moment");
 
 const createReport = async (req, res) => {
   const errors = validationResult(req);
@@ -27,11 +28,13 @@ const createReport = async (req, res) => {
       userId = req.user.id;
     }
 
+    const formattedDate = moment(date, "DD-MM-YYYY").format("YYYY-MM-DD");
+
     const newReport = await Report.create({
       title,
       violation,
       location,
-      date,
+      date: formattedDate,
       actors,
       detail,
       is_anonymous,
