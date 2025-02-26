@@ -10,7 +10,9 @@ const createReportValidator = [
     .withMessage("Title must be at least 5 words"),
   body("violation").isString().withMessage("Violation must be a string"),
   body("location").isString().withMessage("Location must be a string"),
-  body("date").isISO8601().withMessage("Date must be a valid date"),
+  body("date")
+    .matches(/^\d{2}-\d{2}-\d{4}$/)
+    .withMessage("Date must be in format DD-MM-YYYY"),
   body("actors").isString().withMessage("Actors must be a string"),
   body("detail")
     .isString()
