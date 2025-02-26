@@ -19,4 +19,6 @@ router.post("/logout", authenticate, authController.logout);
 
 router.get("/profile", authenticate, authController.getProfile);
 
+router.post("/token", authController.getToken);
+
 module.exports = router;

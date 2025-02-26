@@ -16,7 +16,7 @@ router.use("/auth", authRoutes);
 router.use("/reports", auth, reportRoutes);
 // router.use('/reports', auth, reportRoutes);
 // router.use('/chats', auth, chatRoutes);
-// router.use('/notifications', auth, notificationRoutes);
+router.use("/notifications", auth, notificationRoutes);
 
 // Admin routes
 // router.use('/admin', auth, role(['super-admin', 'admin-verifikator', 'admin-prosesor']), adminRoutes);

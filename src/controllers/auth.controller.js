@@ -305,6 +305,36 @@ const getProfile = async (req, res) => {
   }
 };
 
+const getToken = async (req, res) => {
+  const { refresh_token } = req.body;
+
+  try {
+    const existingToken = await RefreshToken.findOne({
+      where: {
+        token: refresh_token,
+      },
+    });
+
+    if (!existingToken) {
+      return errorResponse(res, "Invalid refresh token", 401);
+    }
+
+    const user = await User.findByPk(existingToken.userId);
+    if (!user) {
+      return errorResponse(res, "User not found", 404);
+    }
+
+    const newAccessToken = jwt.generateAccessToken(user);
+
+    return successResponse(res, "Token refreshed successfully", {
+      access_token: newAccessToken,
+      token_type: "Bearer",
+    });
+  } catch (error) {
+    return errorResponse(res, "Internal server error", 500, error.message);
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -314,4 +344,5 @@ module.exports = {
   updatePassword,
   logout,
   getProfile,
+  getToken,
 };
