@@ -6,8 +6,8 @@ const createReportValidator = [
     .withMessage("Title must be a string")
     .isLength({ min: 3 })
     .withMessage("Title must be at least 3 words")
-    .custom((value) => value.split(" ").length >= 5)
-    .withMessage("Title must be at least 5 words"),
+    .custom((value) => value.split(" ").length >= 3)
+    .withMessage("Title must be at least 3 words"),
   body("violation").isString().withMessage("Violation must be a string"),
   body("location").isString().withMessage("Location must be a string"),
   body("date")
