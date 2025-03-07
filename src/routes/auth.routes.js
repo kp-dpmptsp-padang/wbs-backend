@@ -9,8 +9,11 @@ const authenticate = require("../middlewares/auth.middleware");
 
 router.post("/register", validateRegister, authController.register);
 router.post("/login", validateLogin, authController.login);
-router.post("/forgot-password", authController.forgotPassword);
+router.post("/forgot-password", authController.forgotPasswordWeb);
+router.post("/forgot-password-android", authController.forgotPasswordAndroid);
+router.post("/verify-code", authController.verifyResetCode);
 router.post("/reset-password", authController.resetPassword);
+router.post("/reset-password-android", authController.resetPasswordAndroid);
 
 router.put("/profile", authenticate, authController.updateProfile);
 router.put("/password", authenticate, authController.updatePassword);
