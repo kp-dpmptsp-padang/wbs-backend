@@ -1,34 +1,40 @@
-"use strict";
-const { Model } = require("sequelize");
-module.exports = (sequelize, DataTypes) => {
-  class Notification extends Model {
-    static associate(models) {
-      Notification.belongsTo(models.User, {
-        foreignKey: "user_id",
-        as: "user",
-      });
-    }
-  }
-  Notification.init(
-    {
-      user_id: {
-        type: DataTypes.INTEGER,
+'use strict';
+/** @type {import('sequelize-cli').Migration} */
+module.exports = {
+  async up(queryInterface, Sequelize) {
+    await queryInterface.createTable('Notifications', {
+      id: {
         allowNull: false,
+        autoIncrement: true,
+        primaryKey: true,
+        type: Sequelize.INTEGER
+      },
+      user_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'Users',
+          key: 'id'
+        }
       },
       message: {
-        type: DataTypes.STRING,
-        allowNull: false,
+        type: Sequelize.STRING,
+        allowNull: false
       },
       is_read: {
-        type: DataTypes.BOOLEAN,
-        allowNull: false,
-        defaultValue: false,
+        type: Sequelize.BOOLEAN
       },
-    },
-    {
-      sequelize,
-      modelName: "Notification",
-    }
-  );
-  return Notification;
+      createdAt: {
+        allowNull: false,
+        type: Sequelize.DATE
+      },
+      updatedAt: {
+        allowNull: false,
+        type: Sequelize.DATE
+      }
+    });
+  },
+  async down(queryInterface, Sequelize) {
+    await queryInterface.dropTable('Notifications');
+  }
 };

@@ -1,4 +1,15 @@
 /node_modules
 /.env
 /uploads
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 db_wbs.sql

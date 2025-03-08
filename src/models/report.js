@@ -1,87 +1,47 @@
-"use strict";
-const { Model } = require("sequelize");
+'use strict';
+const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class Report extends Model {
     static associate(models) {
-      Report.hasMany(models.Report_File, {
-        foreignKey: "report_id",
-        as: "files",
-      });
+      // Report belongs to User
       Report.belongsTo(models.User, {
-        foreignKey: "userId",
+        foreignKey: "user_id",
         as: "user",
       });
+      // Report belongs to Admin User
       Report.belongsTo(models.User, {
-        foreignKey: "adminId",
+        foreignKey: "admin_id",
         as: "admin",
+      });
+      // Report has many Chats
+      Report.hasMany(models.Chat, {
+        foreignKey: "report_id",
+        as: "chats",
+      });
+      // Report has many ReportFiles
+      Report.hasMany(models.ReportFile, {
+        foreignKey: "report_id",
+        as: "reportFiles",
       });
     }
   }
-  Report.init(
-    {
-      title: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      violation: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      location: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      date: {
-        type: DataTypes.DATE,
-        allowNull: false,
-      },
-      actors: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      detail: {
-        type: DataTypes.TEXT,
-        allowNull: false,
-      },
-      unique_code: {
-        type: DataTypes.STRING,
-        unique: true,
-        allowNull: true,
-      },
-      status: {
-        type: DataTypes.ENUM(
-          "menunggu-verifikasi",
-          "diproses",
-          "ditolak",
-          "selesai"
-        ),
-        allowNull: false,
-      },
-      rejection_reason: {
-        type: DataTypes.TEXT,
-        allowNull: true,
-      },
-      admin_notes: {
-        type: DataTypes.TEXT,
-        allowNull: true,
-      },
-      is_anonymous: {
-        type: DataTypes.BOOLEAN,
-        allowNull: false,
-      },
-      userId: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-      },
-      adminId: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-      },
-    },
-    {
-      sequelize,
-      modelName: "Report",
-    }
-  );
+  Report.init({
+    title: DataTypes.STRING,
+    violation: DataTypes.STRING,
+    location: DataTypes.STRING,
+    date: DataTypes.DATE,
+    actors: DataTypes.STRING,
+    detail: DataTypes.TEXT,
+    unique_code: DataTypes.STRING,
+    status: DataTypes.ENUM('menunggu-verifikasi', 'diproses', 'ditolak', 'selesai'),
+    rejection_reason: DataTypes.TEXT,
+    admin_notes: DataTypes.TEXT,
+    admin_id: DataTypes.INTEGER,
+    user_id: DataTypes.INTEGER,
+    is_anonymous: DataTypes.BOOLEAN,
+  }, {
+    sequelize,
+    modelName: 'Report',
+  });
   return Report;
 };

@@ -20,12 +20,11 @@ module.exports = {
       },
       role: {
         type: Sequelize.ENUM(
-          "pelapor",
+          "user",
           "super-admin",
-          "admin-verifikator",
-          "admin-prosesor"
+          "admin",
         ),
-        defaultValue: "pelapor",
+        defaultValue: "user",
         allowNull: false,
       },
       name: {

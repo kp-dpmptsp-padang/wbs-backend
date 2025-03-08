@@ -102,11 +102,35 @@ Response: `200 OK`
 
 ```json
 {
-  "message": "Password reset link sent"
+  "message": "Password reset code sent to your email"
 }
 ```
 
-### Reset Password
+#### Verify Reset Code
+
+```http
+POST /auth/verify-reset-code
+```
+
+Request Body:
+
+```json
+{
+  "email": "string",
+  "code": "string"
+}
+```
+
+Response: `200 OK`
+
+```json
+{
+  "message": "Code verified successfully",
+  "reset_token": "string"
+}
+```
+
+#### Reset Password
 
 ```http
 POST /auth/reset-password
@@ -116,8 +140,9 @@ Request Body:
 
 ```json
 {
-  "token": "string",
-  "new_password": "string"
+  "reset_token": "string",
+  "password": "string",
+  "password_confirmation": "string"
 }
 ```
 
@@ -126,6 +151,26 @@ Response: `200 OK`
 ```json
 {
   "message": "Password has been reset successfully"
+}
+```
+
+#### Get User Profile
+
+```http
+GET /auth/profile
+```
+
+Response: `200 OK`
+
+```json
+{
+  "data": {
+    "id": "integer",
+    "name": "string",
+    "email": "string",
+    "role": "string",
+    "created_at": "datetime"
+  }
 }
 ```
 
@@ -178,6 +223,30 @@ Response: `200 OK`
 ```json
 {
   "message": "Password updated successfully"
+}
+```
+
+#### Refresh Token
+
+```http
+POST /auth/refresh
+```
+
+Request Body:
+
+```json
+{
+  "refresh_token": "string"
+}
+```
+
+Response: `200 OK`
+
+```json
+{
+  "access_token": "string",
+  "token_type": "Bearer",
+  "expires_in": "integer"
 }
 ```
 
@@ -236,6 +305,43 @@ Response: `201 Created`
     "title": "string",
     "unique_code": "string (if anonymous)",
     "status": "menunggu-verifikasi"
+  }
+}
+```
+
+#### Get My Reports
+
+```http
+GET /reports/mine
+```
+
+Query Parameters:
+
+- status: string (menunggu-verifikasi|diproses|ditolak|selesai)
+- page: integer
+- per_page: integer
+
+Response: `200 OK`
+
+```json
+{
+  "data": [
+    {
+      "id": "integer",
+      "title": "string",
+      "violation": "string",
+      "location": "string",
+      "date": "date",
+      "status": "string",
+      "created_at": "datetime",
+      "is_anonymous": "boolean"
+    }
+  ],
+  "meta": {
+    "current_page": "integer",
+    "last_page": "integer",
+    "per_page": "integer",
+    "total": "integer"
   }
 }
 ```
@@ -317,7 +423,7 @@ Response: `200 OK`
       "id": "integer",
       "name": "string"
     },
-    "processor": {
+    "admin": {
       "id": "integer",
       "name": "string"
     }
@@ -333,7 +439,7 @@ GET /reports/anonymous/{unique_code}
 
 Response: Same as Get Report Detail
 
-#### Process Report
+#### Process Report (Admin)
 
 ```http
 POST /reports/{id}/process
@@ -351,7 +457,7 @@ Response: `200 OK`
 }
 ```
 
-#### Reject Report
+#### Reject Report (Admin)
 
 ```http
 POST /reports/{id}/reject
@@ -377,7 +483,7 @@ Response: `200 OK`
 }
 ```
 
-#### Complete Report
+#### Complete Report (Admin)
 
 ```http
 POST /reports/{id}/complete
@@ -499,7 +605,7 @@ Request Body:
   "name": "string",
   "email": "string",
   "password": "string",
-  "role": "admin-verifikator|admin-prosesor"
+  "password_confirmation": "string"
 }
 ```
 
@@ -512,7 +618,7 @@ Response: `201 Created`
     "id": "integer",
     "name": "string",
     "email": "string",
-    "role": "string"
+    "role": "admin"
   }
 }
 ```
@@ -530,7 +636,7 @@ Request Body:
   "name": "string",
   "email": "string",
   "password": "string|null",
-  "role": "admin-verifikator|admin-prosesor"
+  "password_confirmation": "string|null"
 }
 ```
 
@@ -543,7 +649,7 @@ Response: `200 OK`
     "id": "integer",
     "name": "string",
     "email": "string",
-    "role": "string"
+    "role": "admin"
   }
 }
 ```
@@ -614,54 +720,36 @@ Response: `200 OK`
 }
 ```
 
-#### Get Verifikator Dashboard
+#### Get Admin Dashboard
 
 ```http
-GET /dashboard/verifikator
+GET /dashboard/admin
 ```
 
 Response: `200 OK`
 
 ```json
 {
-  "pending_verifications": {
-    "total": "integer",
-    "urgent": "integer"
+  "stats": {
+    "pending_verification": "integer",
+    "in_process": "integer",
+    "completed_this_month": "integer",
+    "rejected_this_month": "integer"
   },
-  "verification_stats": {
-    "today_verified": "integer",
-    "today_rejected": "integer",
-    "weekly_performance": [
-      {
-        "date": "date",
-        "verified": "integer",
-        "rejected": "integer"
-      }
-    ]
-  }
-}
-```
-
-#### Get Prosesor Dashboard
-
-```http
-GET /dashboard/prosesor
-```
-
-Response: `200 OK`
-
-```json
-{
-  "active_cases": {
-    "total": "integer",
-    "need_update": "integer",
-    "near_deadline": "integer"
-  },
-  "workload_stats": {
-    "assigned_reports": "integer",
-    "completed_reports": "integer",
-    "average_completion_time": "string"
-  }
+  "reports_by_status": [
+    {
+      "status": "string",
+      "count": "integer"
+    }
+  ],
+  "recent_reports": [
+    {
+      "id": "integer",
+      "title": "string",
+      "status": "string",
+      "created_at": "datetime"
+    }
+  ]
 }
 ```
 
@@ -685,9 +773,14 @@ Response: `200 OK`
     {
       "admin_id": "integer",
       "name": "string",
-      "role": "string",
       "reports_handled": "integer",
       "average_response_time": "string"
+    }
+  ],
+  "monthly_reports": [
+    {
+      "month": "string",
+      "reports_count": "integer"
     }
   ]
 }
@@ -714,9 +807,8 @@ Response: `200 OK`
   "data": [
     {
       "id": "integer",
-      "type": "string",
       "message": "string",
-      "read": "boolean",
+      "is_read": "boolean",
       "created_at": "datetime",
       "report_id": "integer|null"
     }
@@ -754,54 +846,6 @@ Response: `200 OK`
 ```json
 {
   "message": "All notifications marked as read"
-}
-```
-
-#### Get Notification Settings
-
-```http
-GET /notifications/settings
-```
-
-Response: `200 OK`
-
-```json
-{
-  "email_notifications": "boolean",
-  "browser_notifications": "boolean",
-  "notification_types": {
-    "report_status": "boolean",
-    "new_message": "boolean",
-    "system_updates": "boolean"
-  }
-}
-```
-
-#### Update Notification Settings
-
-```http
-PUT /notifications/settings
-```
-
-Request Body:
-
-```json
-{
-  "email_notifications": "boolean",
-  "browser_notifications": "boolean",
-  "notification_types": {
-    "report_status": "boolean",
-    "new_message": "boolean",
-    "system_updates": "boolean"
-  }
-}
-```
-
-Response: `200 OK`
-
-```json
-{
-  "message": "Notification settings updated successfully"
 }
 ```
 

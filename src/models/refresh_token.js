@@ -21,6 +21,7 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   RefreshToken.associate = (models) => {
+    // RefreshToken belongs to User
     RefreshToken.belongsTo(models.User, {
       foreignKey: "userId",
       onDelete: "CASCADE",
