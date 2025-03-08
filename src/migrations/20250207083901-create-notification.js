@@ -11,18 +11,20 @@ module.exports = {
       },
       user_id: {
         type: Sequelize.INTEGER,
-        allowNull: false,
         references: {
-          model: 'Users',
-          key: 'id'
-        }
+          model: "Users",
+          key: "id",
+        },
+        onDelete: "CASCADE",
       },
       message: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: false,
       },
       is_read: {
-        type: Sequelize.BOOLEAN
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
       },
       createdAt: {
         allowNull: false,

@@ -22,7 +22,7 @@ module.exports = {
         type: Sequelize.ENUM(
           "user",
           "super-admin",
-          "admin",
+          "admin"
         ),
         defaultValue: "user",
         allowNull: false,
@@ -31,7 +31,6 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false,
       },
-      resetPasswordToken: Sequelize.STRING,
       resetPasswordCode: Sequelize.STRING,
       resetPasswordExpires: Sequelize.DATE,
       createdAt: {
