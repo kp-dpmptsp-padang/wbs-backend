@@ -11,58 +11,71 @@ module.exports = {
       },
       title: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: false,
       },
       violation: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: false,
       },
       location: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: false,
       },
       date: {
         type: Sequelize.DATE,
-        allowNull: false
+        allowNull: false,
       },
       actors: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: false,
       },
       detail: {
         type: Sequelize.TEXT,
-        allowNull: false
+        allowNull: false,
       },
       unique_code: {
         type: Sequelize.STRING,
-        unique: true
+        unique: true,
+        allowNull: true,
       },
       status: {
-        type: Sequelize.ENUM('menunggu-verifikasi', 'diproses', 'ditolak', 'selesai'),
-        allowNull: false
+        type: Sequelize.ENUM(
+          "menunggu-verifikasi",
+          "diproses",
+          "ditolak",
+          "selesai"
+        ),
+        allowNull: false,
       },
       rejection_reason: {
-        type: Sequelize.TEXT
+        type: Sequelize.TEXT,
+        allowNull: true,
       },
       admin_notes: {
-        type: Sequelize.TEXT
+        type: Sequelize.TEXT,
+        allowNull: true,
       },
-      admin_id: {
+      adminId: {
         type: Sequelize.INTEGER,
         references: {
-          model: 'Users',
-          key: 'id'
-        }
+          model: "Users",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+        allowNull: true,
       },
-      user_id: {
+      userId: {
         type: Sequelize.INTEGER,
         references: {
-          model: 'Users',
-          key: 'id'
-        }
+          model: "Users",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+        allowNull: true,
       },
       is_anonymous: {
-        type: Sequelize.BOOLEAN
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
       },
       createdAt: {
         allowNull: false,
