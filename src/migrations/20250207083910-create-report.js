@@ -11,71 +11,58 @@ module.exports = {
       },
       title: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: false
       },
       violation: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: false
       },
       location: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: false
       },
       date: {
         type: Sequelize.DATE,
-        allowNull: false,
+        allowNull: false
       },
       actors: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: false
       },
       detail: {
         type: Sequelize.TEXT,
-        allowNull: false,
+        allowNull: false
       },
       unique_code: {
         type: Sequelize.STRING,
-        unique: true,
-        allowNull: true,
+        unique: true
       },
       status: {
-        type: Sequelize.ENUM(
-          "menunggu-verifikasi",
-          "diproses",
-          "ditolak",
-          "selesai"
-        ),
-        allowNull: false,
+        type: Sequelize.ENUM('menunggu-verifikasi', 'diproses', 'ditolak', 'selesai'),
+        allowNull: false
       },
       rejection_reason: {
-        type: Sequelize.TEXT,
-        allowNull: true,
+        type: Sequelize.TEXT
       },
       admin_notes: {
-        type: Sequelize.TEXT,
-        allowNull: true,
+        type: Sequelize.TEXT
       },
-      adminId: {
+      admin_id: {
         type: Sequelize.INTEGER,
         references: {
-          model: "Users",
-          key: "id",
-        },
-        onDelete: "CASCADE",
-        allowNull: true,
+          model: 'Users',
+          key: 'id'
+        }
       },
-      userId: {
+      user_id: {
         type: Sequelize.INTEGER,
         references: {
-          model: "Users",
-          key: "id",
-        },
-        onDelete: "CASCADE",
-        allowNull: true,
+          model: 'Users',
+          key: 'id'
+        }
       },
       is_anonymous: {
-        type: Sequelize.BOOLEAN,
-        allowNull: false,
+        type: Sequelize.BOOLEAN
       },
       createdAt: {
         allowNull: false,
