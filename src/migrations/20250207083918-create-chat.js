@@ -2,6 +2,10 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
+    // Drop existing Chats table if it exists
+    await queryInterface.dropTable('Chats');
+    
+    // Create new Chats table with correct structure
     await queryInterface.createTable('Chats', {
       id: {
         allowNull: false,
@@ -9,14 +13,27 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      firstName: {
-        type: Sequelize.STRING
+      report_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'Reports',
+          key: 'id'
+        },
+        onDelete: 'CASCADE'
       },
-      lastName: {
-        type: Sequelize.STRING
+      message: {
+        type: Sequelize.TEXT,
+        allowNull: false
       },
-      email: {
-        type: Sequelize.STRING
+      user_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'Users',
+          key: 'id'
+        },
+        onDelete: 'CASCADE'
       },
       createdAt: {
         allowNull: false,
@@ -27,6 +44,10 @@ module.exports = {
         type: Sequelize.DATE
       }
     });
+    
+    // Add indexes for better performance
+    await queryInterface.addIndex('Chats', ['report_id']);
+    await queryInterface.addIndex('Chats', ['user_id']);
   },
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('Chats');

@@ -371,6 +371,7 @@ const webEmailTemplate = (user, resetUrl) => {
 };
 
 const resetPassword = async (req, res) => {
+  console.log('Reset password request received:', req.body);
   const { token, new_password } = req.body;
 
   try {
