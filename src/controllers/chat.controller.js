@@ -1,5 +1,9 @@
 const { Chat, User, Report, Notification } = require("../models");
-const { successResponse, errorResponse, successCreatedResponse } = require("../utils/response");
+const {
+  successResponse,
+  errorResponse,
+  successCreatedResponse,
+} = require("../utils/response");
 
 /**
  * Mendapatkan riwayat chat untuk suatu laporan
@@ -13,7 +17,7 @@ const getReportChats = async (req, res) => {
 
     // Cari laporan untuk verifikasi akses
     const report = await Report.findByPk(reportId);
-    
+
     if (!report) {
       return errorResponse(res, "Laporan tidak ditemukan", 404);
     }
@@ -21,9 +25,13 @@ const getReportChats = async (req, res) => {
     // Periksa akses: pengguna harus pemilik laporan atau admin
     const isOwner = report.userId === userId;
     const isAdmin = ["admin", "super-admin"].includes(req.user.role);
-    
+
     if (!isOwner && !isAdmin && !report.is_anonymous) {
-      return errorResponse(res, "Anda tidak memiliki akses ke chat laporan ini", 403);
+      return errorResponse(
+        res,
+        "Anda tidak memiliki akses ke chat laporan ini",
+        403
+      );
     }
 
     // Dapatkan riwayat chat dengan informasi user
@@ -33,25 +41,80 @@ const getReportChats = async (req, res) => {
         {
           model: User,
           as: "user",
-          attributes: ["id", "name", "role"]
-        }
+          attributes: ["id", "name", "role"],
+        },
       ],
-      order: [["createdAt", "ASC"]]
+      order: [["createdAt", "ASC"]],
     });
 
     // Format hasil sesuai API spec
-    const formattedChats = chats.map(chat => ({
+    const formattedChats = chats.map((chat) => ({
       id: chat.id,
       message: chat.message,
       created_at: chat.createdAt,
-      user: chat.user ? {
-        id: chat.user.id,
-        name: chat.user.name,
-        role: chat.user.role
-      } : null
+      user: chat.user
+        ? {
+            id: chat.user.id,
+            name: chat.user.name,
+            role: chat.user.role,
+          }
+        : null,
     }));
 
-    return successResponse(res, "Chat berhasil diambil", { data: formattedChats });
+    return successResponse(res, "Chat berhasil diambil", {
+      data: formattedChats,
+    });
+  } catch (error) {
+    console.error("Error fetching chats:", error);
+    return errorResponse(res, "Server error", 500);
+  }
+};
+
+/**
+ * Mengambil pesan chat anonymous
+ * @param {Object} req - Request object
+ * @param {Object} res - Response object
+ */
+
+const getReportChatsAnonymous = async (req, res) => {
+  try {
+    const unique_code = req.params.unique_code;
+    // Cari laporan untuk verifikasi akses
+    const report = await Report.findOne({
+      where: { unique_code: unique_code },
+    });
+    if (!report) {
+      return errorResponse(res, "Laporan tidak ditemukan", 404);
+    }
+
+    // Dapatkan riwayat chat dengan informasi user
+    const chats = await Chat.findAll({
+      where: { report_id: report.id },
+      include: [
+        {
+          model: User,
+          as: "user",
+          attributes: ["id", "name", "role"],
+        },
+      ],
+      order: [["createdAt", "ASC"]],
+    });
+    // Format hasil sesuai API spec
+    const formattedChats = chats.map((chat) => ({
+      id: chat.id,
+      message: chat.message,
+      created_at: chat.createdAt,
+      user: chat.user
+        ? {
+            id: chat.user.id,
+            name: chat.user.name,
+            role: chat.user.role,
+          }
+        : null,
+    }));
+    return successResponse(res, "Chat berhasil diambil", {
+      data: formattedChats,
+    });
   } catch (error) {
     console.error("Error fetching chats:", error);
     return errorResponse(res, "Server error", 500);
@@ -75,7 +138,7 @@ const sendChatMessage = async (req, res) => {
 
     // Cari laporan untuk verifikasi akses
     const report = await Report.findByPk(reportId);
-    
+
     if (!report) {
       return errorResponse(res, "Laporan tidak ditemukan", 404);
     }
@@ -83,26 +146,30 @@ const sendChatMessage = async (req, res) => {
     // Periksa akses: pengguna harus pemilik laporan atau admin
     const isOwner = report.userId === userId;
     const isAdmin = ["admin", "super-admin"].includes(req.user.role);
-    
+
     if (!isOwner && !isAdmin) {
-      return errorResponse(res, "Anda tidak memiliki akses untuk mengirim pesan ke laporan ini", 403);
+      return errorResponse(
+        res,
+        "Anda tidak memiliki akses untuk mengirim pesan ke laporan ini",
+        403
+      );
     }
 
     // Buat pesan chat baru
     const newChat = await Chat.create({
       report_id: reportId,
       user_id: userId,
-      message: message
+      message: message,
     });
 
     // Ambil data user untuk response
     const user = await User.findByPk(userId, {
-      attributes: ["id", "name", "role"]
+      attributes: ["id", "name", "role"],
     });
 
     // Kirim notifikasi ke penerima pesan
     let recipientId;
-    
+
     if (isAdmin) {
       // Jika pengirim adalah admin, notifikasi ke pelapor
       recipientId = report.userId;
@@ -116,7 +183,7 @@ const sendChatMessage = async (req, res) => {
       await Notification.create({
         user_id: recipientId,
         message: `Pesan baru dari ${user.name} terkait laporan "${report.title}"`,
-        is_read: false
+        is_read: false,
       });
     }
 
@@ -128,11 +195,47 @@ const sendChatMessage = async (req, res) => {
       user: {
         id: user.id,
         name: user.name,
-        role: user.role
-      }
+        role: user.role,
+      },
     };
 
-    return successCreatedResponse(res, "Pesan berhasil dikirim", { data: responseData });
+    return successCreatedResponse(res, "Pesan berhasil dikirim", {
+      data: responseData,
+    });
+  } catch (error) {
+    console.error("Error sending chat message:", error);
+    return errorResponse(res, "Server error", 500);
+  }
+};
+
+const sendChatMessageAnonymous = async (req, res) => {
+  try {
+    const unique_code = req.params.unique_code;
+    const { message } = req.body;
+    if (!message || message.trim() === "") {
+      return errorResponse(res, "Pesan tidak boleh kosong", 400);
+    }
+    // Cari laporan untuk verifikasi akses
+    const report = await Report.findOne({ where: { unique_code } });
+    if (!report) {
+      return errorResponse(res, "Laporan tidak ditemukan", 404);
+    }
+    // Buat pesan chat baru
+    const newChat = await Chat.create({
+      report_id: report.id,
+      user_id: null, // Set user_id menjadi null untuk pesan anonim
+      message: message,
+    });
+    // Format response sesuai API spec
+    const responseData = {
+      id: newChat.id,
+      message: newChat.message,
+      created_at: newChat.createdAt,
+      user: null, // Set user menjadi null untuk pesan anonim
+    };
+    return successCreatedResponse(res, "Pesan berhasil dikirim", {
+      data: responseData,
+    });
   } catch (error) {
     console.error("Error sending chat message:", error);
     return errorResponse(res, "Server error", 500);
@@ -141,5 +244,7 @@ const sendChatMessage = async (req, res) => {
 
 module.exports = {
   getReportChats,
-  sendChatMessage
+  getReportChatsAnonymous,
+  sendChatMessage,
+  sendChatMessageAnonymous,
 };

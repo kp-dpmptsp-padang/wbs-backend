@@ -13,3 +13,4 @@
 *.sln
 *.sw?
 db_wbs.sql
+wbs_clear.sql
