@@ -5,23 +5,88 @@ const {
   validateRegister,
   validateLogin,
 } = require("../validators/auth.validator");
-const authenticate = require("../middlewares/auth.middleware");
+const auth = require("../middlewares/auth.middleware");
 
-router.post("/register", validateRegister, authController.register);
-router.post("/login", validateLogin, authController.login);
-router.post("/forgot-password", authController.forgotPasswordWeb);
-router.post("/forgot-password-android", authController.forgotPasswordAndroid);
-router.post("/verify-code", authController.verifyResetCode);
-router.post("/reset-password", authController.resetPassword);
-router.post("/reset-password-android", authController.resetPasswordAndroid);
+// ==== Rute publik (tidak memerlukan autentikasi) ====
 
-router.put("/profile", authenticate, authController.updateProfile);
-router.put("/password", authenticate, authController.updatePassword);
+// Registrasi pengguna
+router.post(
+  "/register", 
+  validateRegister, 
+  authController.register
+);
 
-router.post("/logout", authenticate, authController.logout);
+// Login
+router.post(
+  "/login", 
+  validateLogin, 
+  authController.login
+);
 
-router.get("/profile", authenticate, authController.getProfile);
+// Forgot password (web)
+router.post(
+  "/forgot-password", 
+  authController.forgotPasswordWeb
+);
 
-router.post("/token", authController.getToken);
+// Forgot password (android)
+router.post(
+  "/forgot-password-android", 
+  authController.forgotPasswordAndroid
+);
+
+// Verifikasi kode reset password
+router.post(
+  "/verify-code", 
+  authController.verifyResetCode
+);
+
+// Reset password (web)
+router.post(
+  "/reset-password", 
+  authController.resetPassword
+);
+
+// Reset password (android)
+router.post(
+  "/reset-password-android", 
+  authController.resetPasswordAndroid
+);
+
+// Refresh token
+router.post(
+  "/token", 
+  authController.getToken
+);
+
+// ==== Rute terproteksi (memerlukan autentikasi) ====
+
+// Update profil
+router.put(
+  "/profile", 
+  auth, 
+  authController.updateProfile
+);
+
+// Update password
+router.put(
+  "/password", 
+  auth, 
+  authController.updatePassword
+);
+
+// Logout
+router.post(
+  "/logout", 
+  auth, 
+  authController.logout
+);
+
+// Get profile
+router.get(
+  "/profile", 
+  auth, 
+  authController.getProfile
+);
 
 module.exports = router;

@@ -1,12 +1,24 @@
-// const express = require("express");
-// const router = express.Router();
-// const chatController = require("../controllers/chat.controller");
-// const authenticate = require("../middlewares/auth.middleware");
+const express = require("express");
+const router = express.Router();
+const chatController = require("../controllers/chat.controller");
+const authenticate = require("../middlewares/auth.middleware");
+const { validateChatMessage } = require("../validators/chat.validator");
 
-// // Get chats for a specific report
-// router.get("/reports/:report_id", authenticate, chatController.getReportChats);
+// Catatan: auth middleware sudah diterapkan di index.js untuk semua rute /reports
 
-// // Send a new chat message
-// router.post("/reports/:report_id", authenticate, chatController.sendChatMessage);
+// Mendapatkan riwayat chat untuk suatu laporan
+router.get(
+  "/:report_id/chats",
+  authenticate,
+  chatController.getReportChats
+);
 
-// module.exports = router;
+// Mengirim pesan chat baru
+router.post(
+  "/:report_id/chats",
+  authenticate,
+  validateChatMessage,
+  chatController.sendChatMessage
+);
+
+module.exports = router;
