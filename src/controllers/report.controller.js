@@ -21,13 +21,7 @@ const createReport = async (req, res) => {
     const { title, violation, location, date, actors, detail, is_anonymous } =
       req.body;
 
-    // Dapatkan informasi file dari request (diisi oleh middleware upload)
     const fileInfo = req.fileInfo;
-
-    // Validasi apakah file bukti disertakan
-    if (!fileInfo) {
-      return errorResponse(res, "Bukti laporan harus disertakan", 400);
-    }
 
     let userId = null;
     let unique_code = null;
@@ -54,11 +48,13 @@ const createReport = async (req, res) => {
     });
 
     // Simpan info file ke dalam tabel Report_File
-    await Report_File.create({
-      report_id: newReport.id,
-      file_path: fileInfo.path,
-      file_type: "evidence", // Pastikan file_type sesuai dengan enum di model
-    });
+    if (fileInfo) {
+      await Report_File.create({
+        report_id: newReport.id,
+        file_path: fileInfo.path,
+        file_type: "evidence", // Pastikan file_type sesuai dengan enum di model
+      });
+    }
 
     const responseData = {
       id: newReport.id,
