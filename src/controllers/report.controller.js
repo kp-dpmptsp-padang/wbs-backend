@@ -18,11 +18,12 @@ const createReport = async (req, res) => {
   }
 
   try {
-    const { title, violation, location, date, actors, detail, is_anonymous } = req.body;
-    
+    const { title, violation, location, date, actors, detail, is_anonymous } =
+      req.body;
+
     // Dapatkan informasi file dari request (diisi oleh middleware upload)
     const fileInfo = req.fileInfo;
-    
+
     // Validasi apakah file bukti disertakan
     if (!fileInfo) {
       return errorResponse(res, "Bukti laporan harus disertakan", 400);
@@ -296,6 +297,14 @@ const processReport = async (req, res) => {
     report.adminId = adminId;
     await report.save();
 
+    if (report.userId) {
+      await Notification.create({
+        user_id: report.userId,
+        message: `Laporan Anda dengan judul "${report.title}" sedang diproses`,
+        is_read: false,
+      });
+    }
+
     const responseData = {
       id: report.id,
       status: report.status,
@@ -339,6 +348,14 @@ const rejectReport = async (req, res) => {
     report.rejection_reason = rejection_reason;
     await report.save();
 
+    if (report.userId) {
+      await Notification.create({
+        user_id: report.userId,
+        message: `Laporan Anda dengan judul "${report.title}" telah ditolak dengan alasan: ${rejection_reason}`,
+        is_read: false,
+      });
+    }
+
     const responseData = {
       id: report.id,
       status: report.status,
@@ -358,7 +375,7 @@ const completeReport = async (req, res) => {
     const reportId = req.params.id;
     const adminId = req.user.id;
     const { admin_notes } = req.body;
-    
+
     // File handling proof bersifat opsional
     const fileInfo = req.fileInfo;
 
@@ -379,10 +396,14 @@ const completeReport = async (req, res) => {
       return errorResponse(res, "Unauthorized", 403);
     }
     */
-    
+
     // Alternatif jika tidak ada jenis admin spesifik:
-    if (req.user.role !== 'admin' && req.user.role !== 'super-admin') {
-      return errorResponse(res, "Unauthorized: Hanya admin yang dapat menyelesaikan laporan", 403);
+    if (req.user.role !== "admin" && req.user.role !== "super-admin") {
+      return errorResponse(
+        res,
+        "Unauthorized: Hanya admin yang dapat menyelesaikan laporan",
+        403
+      );
     }
 
     const report = await Report.findOne({
@@ -394,7 +415,11 @@ const completeReport = async (req, res) => {
     }
 
     if (report.status !== "diproses") {
-      return errorResponse(res, "Laporan tidak dapat diselesaikan. Status harus 'diproses'", 400);
+      return errorResponse(
+        res,
+        "Laporan tidak dapat diselesaikan. Status harus 'diproses'",
+        400
+      );
     }
 
     report.status = "selesai";
@@ -442,29 +467,29 @@ const getReportFiles = async (req, res) => {
   try {
     const reportId = req.params.id;
     const userId = req.user.id;
-    
+
     // Cari laporan
     const report = await Report.findByPk(reportId);
-    
+
     if (!report) {
       return errorResponse(res, "Report not found", 404);
     }
-    
+
     // Cek akses: pengguna harus pemilik laporan atau admin
     const isOwner = report.userId === userId;
     const isAdmin = ["admin", "super-admin"].includes(req.user.role);
-    
+
     if (!isOwner && !isAdmin && !report.is_anonymous) {
       return errorResponse(res, "Unauthorized access to report files", 403);
     }
-    
+
     // Dapatkan semua file terkait laporan
     const files = await Report_File.findAll({
-      where: { report_id: reportId }
+      where: { report_id: reportId },
     });
-    
+
     // Tambahkan URL untuk setiap file
-    const filesWithUrls = files.map(file => {
+    const filesWithUrls = files.map((file) => {
       const uploadUtils = require("../utils/upload");
       return {
         id: file.id,
@@ -472,15 +497,13 @@ const getReportFiles = async (req, res) => {
         file_path: file.file_path,
         file_type: file.file_type,
         created_at: file.createdAt,
-        url: uploadUtils.getFileUrl(file.file_path)
+        url: uploadUtils.getFileUrl(file.file_path),
       };
     });
-    
-    return successResponse(
-      res, 
-      "Report files retrieved successfully", 
-      { files: filesWithUrls }
-    );
+
+    return successResponse(res, "Report files retrieved successfully", {
+      files: filesWithUrls,
+    });
   } catch (error) {
     console.error("Error fetching report files:", error);
     return errorResponse(res, "Server error");
@@ -494,43 +517,48 @@ const downloadFile = async (req, res) => {
   try {
     const fileId = req.params.fileId;
     const userId = req.user.id;
-    
+
     // Cari file
     const file = await Report_File.findByPk(fileId, {
-      include: [{
-        model: Report,
-        as: "report"
-      }]
+      include: [
+        {
+          model: Report,
+          as: "report",
+        },
+      ],
     });
-    
+
     if (!file) {
       return errorResponse(res, "File not found", 404);
     }
-    
+
     // Cek akses: pengguna harus pemilik laporan atau admin
     const report = file.report;
     const isOwner = report.userId === userId;
     const isAdmin = ["admin", "super-admin"].includes(req.user.role);
-    
+
     if (!isOwner && !isAdmin && !report.is_anonymous) {
       return errorResponse(res, "Unauthorized access to file", 403);
     }
-    
+
     // Periksa apakah file ada di sistem
     const fs = require("fs");
     const path = require("path");
-    
+
     const filePath = path.resolve(file.file_path);
-    
+
     if (!fs.existsSync(filePath)) {
       return errorResponse(res, "File not found on server", 404);
     }
-    
+
     // Tentukan nama file untuk download
     const originalFilename = path.basename(filePath);
-    
+
     // Kirim file sebagai response
-    res.setHeader("Content-Disposition", `attachment; filename=${originalFilename}`);
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=${originalFilename}`
+    );
     res.sendFile(filePath);
   } catch (error) {
     console.error("Error downloading file:", error);
